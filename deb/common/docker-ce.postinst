@@ -7,6 +7,7 @@ case "$1" in
 			if ! getent group docker > /dev/null; then
 				groupadd --system docker
 			fi
+                        update-alternatives --install /usr/bin/dockerd dockerd /usr/bin/dockerd-ce 1
 		fi
 		;;
 	abort-*)
