@@ -45,7 +45,7 @@ ENV PRODUCT ${PRODUCT}
 ENV DEFAULT_PRODUCT_LICENSE ${DEFAULT_PRODUCT_LICENSE}
 # TODO The way we set the version could easily be simplified not to depend on hack/...
 RUN bash ./hack/make/.go-autogen
-RUN go build -o /sbin/dockerd \
+RUN go build -o /dockerd \
     -tags 'autogen apparmor seccomp selinux journald' \
     -i \
     -buildmode=pie \
@@ -60,7 +60,7 @@ WORKDIR /go/src/github.com/docker/libnetwork
 RUN . /binaries-commits && \
     git checkout -q "$LIBNETWORK_COMMIT" && \
     go build -buildmode=pie -ldflags="-w" \
-        -o /sbin/docker-proxy \
+        -o /docker-proxy \
         github.com/docker/libnetwork/cmd/proxy
 
 # docker-init - TODO move this out, last time we bumped was 2016!
@@ -70,11 +70,11 @@ WORKDIR /tini
 RUN . /binaries-commits && \
     git checkout -q "$TINI_COMMIT" && \
     cmake . && make tini-static && \
-    cp tini-static /sbin/docker-init
+    cp tini-static /docker-init
 
 # Final docker image
 FROM scratch
-COPY --from=dockerd-builder /sbin/dockerd /sbin/
-COPY --from=proxy-builder /sbin/docker-proxy /sbin/
-COPY --from=init-builder /sbin/docker-init /sbin/
+COPY --from=dockerd-builder /dockerd /sbin/
+COPY --from=proxy-builder /docker-proxy /sbin/
+COPY --from=init-builder /docker-init /sbin/
 ENTRYPOINT ["/sbin/dockerd"]
