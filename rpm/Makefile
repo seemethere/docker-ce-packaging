@@ -105,4 +105,4 @@ rpmbuild/SOURCES/engine-image:
 
 rpmbuild/SOURCES/distribution_based_engine.json: rpmbuild/SOURCES/engine-image
 	mkdir -p $(@D)
-	docker inspect "$(shell cat $<)" --format '{{ .Config.Labels.distribution_based_engine }}' > $@
+	docker inspect "$(shell cat $<)" --format '{{ .Config.Labels.com.docker.distribution_based_engine }}' > $@

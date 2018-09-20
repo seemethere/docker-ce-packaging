@@ -91,6 +91,6 @@ LABEL \
     org.opencontainers.image.url="https://www.docker.com/products/docker-engine" \
     org.opencontainers.image.vendor="Docker Inc." \
     org.opencontainers.image.version="${VERSION}" \
-    distribution_based_engine="{\"platform\":\"${PLATFORM}\",\"containerd_min_version\":\"1.2.0-beta.1\",\"runtime\":\"host_install\"}"
+    com.docker.distribution_based_engine="{\"platform\":\"${PLATFORM}\",\"containerd_min_version\":\"1.2.0-beta.1\",\"runtime\":\"host_install\"}"
 
 ENTRYPOINT ["/sbin/dockerd"]
