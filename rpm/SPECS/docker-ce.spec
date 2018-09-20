@@ -1,5 +1,5 @@
 %global debug_package %{nil}
-%global update_dockerd update-alternatives --install %{_bindir}/dockerd dockerd %{_bindir}/dockerd-ce 1
+%global update_dockerd if [ ! -f %{_bindir}/dockerd ]; then update-alternatives --install %{_bindir}/dockerd dockerd %{_bindir}/dockerd-ce 1; fi
 
 Name: docker-ce
 Version: %{_version}

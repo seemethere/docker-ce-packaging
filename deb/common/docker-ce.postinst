@@ -2,7 +2,9 @@
 set -e
 
 update_dockerd() {
-	update-alternatives --install /usr/bin/dockerd dockerd /usr/bin/dockerd-ce 1
+	if [ ! -f /usr/bin/dockerd ]; then
+		update-alternatives --install /usr/bin/dockerd dockerd /usr/bin/dockerd-ce 1
+	fi
 }
 
 case "$1" in
