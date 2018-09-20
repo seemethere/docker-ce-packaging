@@ -1,4 +1,5 @@
 %global debug_package %{nil}
+%global update_dockerd update-alternatives --install %{_bindir}/dockerd dockerd %{_bindir}/dockerd-ce 1
 
 Name: docker-ce
 Version: %{_version}
@@ -84,17 +85,19 @@ fi
 if ! getent group docker > /dev/null; then
     groupadd --system docker
 fi
-update-alternatives --install /usr/bin/dockerd dockerd /usr/bin/dockerd-ce 1
+%update_dockerd
+
 
 %preun
 %systemd_preun docker
-update-alternatives --remove dockerd /usr/bin/dockerd-ce
+update-alternatives --remove dockerd /%{_bindir}/dockerd-ce
 
 %postun
 %systemd_postun_with_restart docker
 
 %posttrans
 if [ $1 -ge 0 ] ; then
+    %update_dockerd
     # package upgrade scenario, after new files are installed
 
     # check if docker was running before upgrade
