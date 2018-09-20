@@ -32,7 +32,7 @@ RUN=docker run --rm -i \
 	-v $(CURDIR)/debbuild/$@:/build \
 	debbuild-$@/$(ARCH)
 
-SOURCE_FILES=engine-image cli.tgz docker.service
+SOURCE_FILES=engine-image cli.tgz docker.service distribution_based_engine.json
 SOURCES=$(addprefix sources/, $(SOURCE_FILES))
 
 .PHONY: help
@@ -130,6 +130,10 @@ sources/cli.tgz:
 sources/docker.service: ../systemd/docker.service
 	mkdir -p $(@D)
 	cp $< $@
+
+sources/distribution_based_engine.json: sources/engine-image
+	mkdir -p $(@D)
+	docker inspect "$(shell cat sources/engine-image)" --format '{{ .Config.Labels.distribution_based_engine }}' > $@
 
 sources/engine-image:
 	mkdir -p $(@D)

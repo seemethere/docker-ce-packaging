@@ -40,7 +40,7 @@ RPMBUILD_FLAGS?=-ba\
 	$(SPECS)
 RUN?=$(RPMBUILD) rpmbuild-$@/$(ARCH) $(RPMBUILD_FLAGS)
 
-SOURCE_FILES=engine-image cli.tgz docker.service
+SOURCE_FILES=engine-image cli.tgz docker.service distribution_based_engine.json
 SOURCES=$(addprefix rpmbuild/SOURCES/, $(SOURCE_FILES))
 
 
@@ -102,3 +102,7 @@ rpmbuild/SOURCES/engine-image:
 	$(MAKE) -C ../image image-linux-dm
 	mkdir -p $(@D)
 	cp ../image/image-linux-dm $@
+
+rpmbuild/SOURCES/distribution_based_engine.json:
+	mkdir -p $(@D)
+	docker inspect "$(shell cat rpmbuild/SOURCES/engine-image)" --format '{{ .Config.Labels.distribution_based_engine }}' > $@

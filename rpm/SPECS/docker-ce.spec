@@ -52,16 +52,18 @@ depending on a particular stack or provider.
 
 %install
 # Install containerd-proxy as dockerd
-install -D -m 0755 /sources/dockerd $RPM_BUILD_ROOT/%{_bindir}/dockerd
+install -D -m 0755 /sources/dockerd $RPM_BUILD_ROOT/%{_bindir}/dockerd-ce
 install -D -m 0755 /sources/docker-proxy $RPM_BUILD_ROOT/%{_bindir}/docker-proxy
 install -D -m 0755 /sources/docker-init $RPM_BUILD_ROOT/%{_bindir}/docker-init
 install -D -m 0644 %{_topdir}/SOURCES/docker.service $RPM_BUILD_ROOT/%{_unitdir}/docker.service
+install -D -m 0644 %{_topdir}/SOURCES/distribution_based_engine.json $RPM_BUILD_ROOT/var/lib/docker/distribution_based_engine.json
 
 %files
-/%{_bindir}/dockerd
+/%{_bindir}/dockerd-ce
 /%{_bindir}/docker-proxy
 /%{_bindir}/docker-init
 /%{_unitdir}/docker.service
+/var/lib/docker/distribution_based_engine.json
 
 %pre
 if [ $1 -gt 0 ] ; then
@@ -82,9 +84,11 @@ fi
 if ! getent group docker > /dev/null; then
     groupadd --system docker
 fi
+update-alternatives --install /usr/bin/dockerd dockerd /usr/bin/dockerd-ce 1
 
 %preun
 %systemd_preun docker
+update-alternatives --remove dockerd /usr/bin/dockerd-ce
 
 %postun
 %systemd_postun_with_restart docker
