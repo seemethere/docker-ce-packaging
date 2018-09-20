@@ -1,14 +1,21 @@
 #!/bin/sh
 set -e
 
+update_dockerd() {
+	update-alternatives --install /usr/bin/dockerd dockerd /usr/bin/dockerd-ce 1
+}
+
 case "$1" in
 	configure)
 		if [ -z "$2" ]; then
 			if ! getent group docker > /dev/null; then
 				groupadd --system docker
 			fi
-                        update-alternatives --install /usr/bin/dockerd dockerd /usr/bin/dockerd-ce 1
 		fi
+		update_dockerd
+		;;
+	update)
+		update_dockerd
 		;;
 	abort-*)
 		# How'd we get here??
