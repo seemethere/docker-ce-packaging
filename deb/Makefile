@@ -133,7 +133,8 @@ sources/docker.service: ../systemd/docker.service
 
 sources/distribution_based_engine.json: sources/engine-image
 	mkdir -p $(@D)
-	docker inspect "$(shell cat $<)" --format '{{ .Config.Labels.com.docker.distribution_based_engine }}' > $@
+	docker inspect "$(shell cat $<)" \
+		--format '{{index .Config.Labels "com.docker.distribution_based_engine" }}' > $@
 
 sources/engine-image:
 	mkdir -p $(@D)
