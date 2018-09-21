@@ -78,6 +78,7 @@ ARG VERSION
 ARG GITCOMMIT
 ARG BUILDTIME
 ARG PLATFORM
+ARG ENGINE_IMAGE
 COPY --from=dockerd-builder /dockerd /bin/
 COPY --from=proxy-builder /docker-proxy /bin/
 COPY --from=init-builder /docker-init /bin/
@@ -91,6 +92,6 @@ LABEL \
     org.opencontainers.image.url="https://www.docker.com/products/docker-engine" \
     org.opencontainers.image.vendor="Docker Inc." \
     org.opencontainers.image.version="${VERSION}" \
-    com.docker.distribution_based_engine="{\"platform\":\"${PLATFORM}\",\"containerd_min_version\":\"1.2.0-beta.1\",\"runtime\":\"host_install\"}"
+    com.docker.distribution_based_engine="{\"platform\":\"${PLATFORM}\",\"engine_image\":\"${ENGINE_IMAGE}\",\"containerd_min_version\":\"1.2.0-beta.1\",\"runtime\":\"host_install\"}"
 
 ENTRYPOINT ["/bin/dockerd"]

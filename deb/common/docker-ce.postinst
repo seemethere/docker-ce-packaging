@@ -7,7 +7,7 @@ update_dockerd() {
     if [ -f ${dbefile} ] && cat ${dbefile} | sed -e 's/.*"platform"[ \t]*:[ \t]*"\([^"]*\)".*/\1/g' | grep -v -i community > /dev/null; then
         echo "\n\n\nWarning: Your engine has been activated to Docker Engine - Enterprise but you are still using Community packages\nYou can use the "docker engine update" command to update your system, or switch to using the Enterprise packages.\nSee $URL for more details.\n\n\n"
     else
-        update-alternatives --install /usr/bin/dockerd dockerd /usr/bin/dockerd-ce 1 --slave \
+        update-alternatives --force --install /usr/bin/dockerd dockerd /usr/bin/dockerd-ce 1 --slave \
             ${dbefile} distribution_based_engine.json /var/lib/docker/distribution_based_engine-ce.json
     fi
 }
