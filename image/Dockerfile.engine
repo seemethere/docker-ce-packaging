@@ -82,10 +82,10 @@ ARG VERSION
 ARG GITCOMMIT
 ARG BUILDTIME
 ARG PLATFORM
-COPY --from=dockerd-builder /sbin/dockerd /sbin/
-COPY --from=proxy-builder /sbin/docker-proxy /sbin/
-COPY --from=init-builder /sbin/docker-init /sbin/
-COPY --from=runc-builder /usr/local/sbin/runc /sbin/
+COPY --from=dockerd-builder /sbin/dockerd /bin/
+COPY --from=proxy-builder /sbin/docker-proxy /bin/
+COPY --from=init-builder /sbin/docker-init /bin/
+COPY --from=runc-builder /usr/local/sbin/runc /bin/
 
 LABEL \
     org.opencontainers.image.authors="Docker Inc." \
@@ -98,4 +98,4 @@ LABEL \
     org.opencontainers.image.version="${VERSION}" \
     com.docker.distribution_based_engine="{\"platform\":\"${PLATFORM}\",\"containerd_min_version\":\"1.2.0-beta.1\",\"runtime\":\"host_install\"}"
 
-ENTRYPOINT ["/sbin/dockerd"]
+ENTRYPOINT ["/bin/dockerd"]

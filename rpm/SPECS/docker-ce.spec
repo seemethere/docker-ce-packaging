@@ -1,5 +1,6 @@
 %global debug_package %{nil}
-%global update_dockerd if [ ! -f %{_bindir}/dockerd ]; then update-alternatives --install %{_bindir}/dockerd dockerd %{_bindir}/dockerd-ce 1; fi
+%global update_dockerd dbefile=/var/lib/docker/distribution_based_engine.json; URL=https://docs.docker.com/releasenote; if [ -f ${dbefile} ] && cat ${dbefile} | sed -e 's/.*"platform"[ \t]*:[ \t]*"\([^"]*\)".*/\1/g' | grep -v -i community > /dev/null; then echo "\n\n\nWarning: Your engine has been activated to Docker Engine - Enterprise but you are still using Community packages\nYou can use the "docker engine update" command to update your system, or switch to using the Enterprise packages.\nSee $URL for more details.\n\n\n"; else update-alternatives --install /usr/bin/dockerd dockerd /usr/bin/dockerd-ce 1 --slave ${dbefile} distribution_based_engine.json /var/lib/docker/distribution_based_engine-ce.json; fi
+
 
 Name: docker-ce
 Version: %{_version}
@@ -57,14 +58,14 @@ install -D -m 0755 /sources/dockerd $RPM_BUILD_ROOT/%{_bindir}/dockerd-ce
 install -D -m 0755 /sources/docker-proxy $RPM_BUILD_ROOT/%{_bindir}/docker-proxy
 install -D -m 0755 /sources/docker-init $RPM_BUILD_ROOT/%{_bindir}/docker-init
 install -D -m 0644 %{_topdir}/SOURCES/docker.service $RPM_BUILD_ROOT/%{_unitdir}/docker.service
-install -D -m 0644 %{_topdir}/SOURCES/distribution_based_engine.json $RPM_BUILD_ROOT/var/lib/docker/distribution_based_engine.json
+install -D -m 0644 %{_topdir}/SOURCES/distribution_based_engine.json $RPM_BUILD_ROOT/var/lib/docker/distribution_based_engine-ce.json
 
 %files
 /%{_bindir}/dockerd-ce
 /%{_bindir}/docker-proxy
 /%{_bindir}/docker-init
 /%{_unitdir}/docker.service
-/var/lib/docker/distribution_based_engine.json
+/var/lib/docker/distribution_based_engine-ce.json
 
 %pre
 if [ $1 -gt 0 ] ; then

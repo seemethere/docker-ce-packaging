@@ -18,8 +18,8 @@ COPY SPECS /root/rpmbuild/SPECS
 RUN sed -i 's/altarch/centos/g' /etc/yum.repos.d/CentOS-Sources.repo
 RUN yum-builddep -y /root/rpmbuild/SPECS/*.spec
 COPY --from=golang /usr/local/go /usr/local/go/
-COPY --from=engine /sbin/dockerd /sources/
-COPY --from=engine /sbin/docker-proxy /sources/
-COPY --from=engine /sbin/docker-init /sources/
+COPY --from=engine /bin/dockerd /sources/
+COPY --from=engine /bin/docker-proxy /sources/
+COPY --from=engine /bin/docker-init /sources/
 WORKDIR /root/rpmbuild
 ENTRYPOINT ["/bin/rpmbuild"]

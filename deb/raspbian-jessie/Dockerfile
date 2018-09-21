@@ -28,9 +28,9 @@ ENV DISTRO raspbian
 ENV SUITE jessie
 
 COPY --from=golang /usr/local/go /usr/local/go
-COPY --from=engine /sbin/dockerd /source/
-COPY --from=engine /sbin/docker-proxy /source/
-COPY --from=engine /sbin/docker-init /source/
+COPY --from=engine /bin/dockerd /source/
+COPY --from=engine /bin/docker-proxy /source/
+COPY --from=engine /bin/docker-init /source/
 
 WORKDIR /root/build-deb
 COPY build-deb /root/build-deb/build-deb
