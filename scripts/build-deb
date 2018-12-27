@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+set -x
+set -e
+
+EPOCH="${EPOCH:-}"
+EPOCH_SEP=""
+if [[ -n "$EPOCH" ]]; then
+    EPOCH_SEP=":"
+fi
+
+if [[ -z "${ORIG_VERSION}" ]]; then
+  echo "ORIG_VERSION must be filled out, exiting..."
+fi
+DEB_VERSION_BITS=$(/root/build-deb/gen-deb-ver "${GOPATH}/src/github.com/docker/docker" "$ORIG_VERSION")
+VERSION=$(echo "${DEB_VERSION_BITS}" | cut -d' ' -f 1)
+DEB_VERSION=$(echo "${DEB_VERSION_BITS}" | cut -d' ' -f 2)
+
+debSource="$(awk -F ': ' '$1 == "Source" { print $2; exit }' debian/control)"
+debMaintainer="$(awk -F ': ' '$1 == "Maintainer" { print $2; exit }' debian/control)"
+debDate="$(date --rfc-2822)"
+
+SUITE=$(lsb_release -sc)
+DISTRO=$(. /etc/os-release; echo "${ID}")
+
+cat > "debian/changelog" <<-EOF
+$debSource (${EPOCH}${EPOCH_SEP}${DEB_VERSION}-0~${DISTRO}-${SUITE}) ${SUITE}; urgency=low
+  * Version: ${VERSION}
+ -- $debMaintainer  $debDate
+EOF
+cat debian/changelog
+# The space above at the start of the line for the debMaintainer is very important
+
+# Give the script a git commit because it wants it
+export DOCKER_GITCOMMIT=${DOCKER_GITCOMMIT-$(cd cli; $GIT_COMMAND rev-parse --short HEAD)}
+
+dpkg-buildpackage -uc -us -I.git
+OUT_DIR="/out/$(. /etc/os-release; echo "$ID")/$(lsb_release -sc)"/$(dpkg --print-architecture)/
+mkdir -p "${OUT_DIR}"
+mv -v ../*.deb "${OUT_DIR}"
+mv -v ../*.changes "${OUT_DIR}"

@@ -1,0 +1,20 @@
+#!/usr/bin/make -f
+
+VERSION ?= $(shell cat cli/VERSION)
+
+override_dh_gencontrol:
+	dh_gencontrol
+
+override_dh_auto_build:
+	# Build the CLI
+	cd /go/src/github.com/docker/cli && \
+		LDFLAGS='' DISABLE_WARN_OUTSIDE_CONTAINER=1 make VERSION=$(VERSION) GITCOMMIT=$(DOCKER_GITCOMMIT) dynbinary manpages
+
+override_dh_auto_install:
+	# docker-ce-cli install
+	install -D -m 0644 /go/src/github.com/docker/cli/contrib/completion/fish/docker.fish debian/docker-ce-cli/usr/share/fish/vendor_completions.d/docker.fish
+	install -D -m 0644 /go/src/github.com/docker/cli/contrib/completion/zsh/_docker debian/docker-ce-cli/usr/share/zsh/vendor-completions/_docker
+	install -D -m 0755 /go/src/github.com/docker/cli/build/docker debian/docker-ce-cli/usr/bin/docker
+
+override_dh_shlibdeps:
+	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
