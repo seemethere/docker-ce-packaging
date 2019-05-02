@@ -23,14 +23,13 @@ clean: ## remove build artifacts
 static: static-linux cross-mac cross-win cross-arm ## create all static packages
 
 .PHONY: static-linux
-static-linux: static-cli static-engine ## create tgz with linux x86_64 client and server
+static-linux: static-cli static-engine static-plugins ## create tgz with linux x86_64 client and server
 	mkdir -p build/linux/docker
 	cp $(CLI_DIR)/build/docker build/linux/docker/
 	for f in dockerd containerd ctr containerd-shim docker-init docker-proxy runc; do \
 		cp -L $(ENGINE_DIR)/bundles/binary-daemon/$$f build/linux/docker/$$f; \
 	done
 	tar -C build/linux -c -z -f build/linux/docker-$(STATIC_VERSION).tgz docker
-
 	# extra binaries for running rootless
 	mkdir -p build/linux/docker-rootless-extras
 	for f in rootlesskit rootlesskit-docker-proxy dockerd-rootless.sh vpnkit; do \
@@ -86,6 +85,14 @@ BUILD_PLUGIN_RUN_VARS = --rm -i \
 	-v "$(CURDIR)/build/$(CLI_BUILD_DIR)/docker/cli-plugins":/out \
 	-v "$(CURDIR)/../plugins":/plugins:ro \
 	-v "$(CURDIR)/scripts/build-cli-plugins":/build:ro
+
+.PHONY: static-plugins
+static-plugins: SPOOF_GOOS := linux
+static-plugins: CLI_BUILD_DIR := linux
+static-plugins:
+	mkdir -p build/$(CLI_BUILD_DIR)/docker
+	docker run $(BUILD_PLUGIN_RUN_VARS) $(DOCKER_CLI_GOLANG_IMG) /build
+	$(CHOWN) -R $(shell id -u):$(shell id -g) build
 
 .PHONY: cross-mac-plugins
 cross-mac-plugins: SPOOF_GOOS := darwin
