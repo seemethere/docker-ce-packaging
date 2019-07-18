@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+
+source /.rpm-helpers
+
+SPEC_FILE=${SPEC_FILE:-SPECS/docker-ce.spec}
+
+set -e
+
+# copied from get.docker.com
+get_distribution() {
+    lsb_dist=""
+    # Every system that we officially support has /etc/os-release
+    if [ -r /etc/os-release ]; then
+        lsb_dist="$(. /etc/os-release && echo "$ID")"
+    fi
+    # Returning an empty string here should be alright since the
+    # case statements don't act unless you provide an actual value
+    echo "$lsb_dist"
+}
+
+VERSION="$(git --git-dir "${GO_SRC_PATH}/.git" describe --tags | sed 's/^v//')"
+RPM_VER_BITS=$(gen-rpm-ver-bits "${VERSION}")
+RPM_VERSION=$(echo "${RPM_VER_BITS}" | cut -f1 -d' ')
+RPM_RELEASE_VERSION=$(echo "${RPM_VER_BITS}" | cut -f2 -d' ')
+
+
+# Check if we're on a tagged version, change VERSION to dev build if not
+if ! git --git-dir "${GO_SRC_PATH}/.git" describe --exact-match HEAD >/dev/null 2>&1; then
+    # based on golang's pseudo-version: https://groups.google.com/forum/#!topic/golang-dev/a5PqQuBljF4
+    #
+    # using a "pseudo-version" of the form v0.0.0-yyyymmddhhmmss-abcdefabcdef,
+    # where the time is the commit time in UTC and the final suffix is the prefix
+    # of the commit hash. The time portion ensures that two pseudo-versions can
+    # be compared to determine which happened later, the commit hash identifes
+    # the underlying commit, and the v0.0.0- prefix identifies the pseudo-version
+    # as a pre-release before version v0.0.0, so that the go command prefers any
+    # tagged release over any pseudo-version.
+    gitDate=$(date --date "@$(git --git-dir "${GO_SRC_PATH}/.git" log -1 --pretty='%at')" +'%Y%m%d.%H%M%S')
+    gitCommit=$(git --git-dir "${GO_SRC_PATH}/.git" log -1 --pretty='%h')
+    VERSION="0.0.0-${gitDate}-${gitCommit}"
+    RPM_RELEASE_VERSION=0
+    # `-` is an illegal character for RPM versions so just replace all instances with `.`
+    RPM_VERSION="${VERSION//-/.}"
+fi
+REF=$(git --git-dir "${GO_SRC_PATH}/.git" rev-parse HEAD)
+
+export REF
+export RPM_RELEASE_VERSION
+export RPM_VERSION
+export VERSION
+
+dep_install=""
+if dnf builddep --version >/dev/null 2>/dev/null; then
+    dep_install="dnf builddep -y ${SPEC_FILE}"
+elif yum-builddep --version >/dev/null 2>/dev/null; then
+    dep_install="yum-builddep -y ${SPEC_FILE}"
+elif zypper --version >/dev/null 2>/dev/null; then
+    dep_install="zypper -n install $(rpmspec --parse "${SPEC_FILE}" | grep BuildRequires | cut -d' ' -f2 | xargs)"
+fi
+
+if [ -z "${dep_install}" ]; then
+    echo "No dependency installer found, exiting..."
+    exit 1
+fi
+
+(
+    set -x
+    ${dep_install}
+)
+
+DIST_ID=$(. /etc/os-release; echo "${ID}")
+DIST_VERSION=$(. /etc/os-release; echo "${VERSION_ID}")
+ARCH=$(uname -m)
+DEST_DIR=/out/${DIST_ID}/${DIST_VERSION}/${ARCH}/
+(
+    set -x
+    rpmbuild -ba "${SPEC_FILE}"
+    mkdir -p "${DEST_DIR}"
+    mv -v RPMS/*/*.rpm "${DEST_DIR}"
+    mv -v SRPMS/*.rpm "${DEST_DIR}"
+)
+
+# Only create an archive if env variable is specified
+if [[ -n "${CREATE_ARCHIVE}" ]]; then
+    tar -C /out -cvzf "/archive/${DIST_ID}-${DIST_VERSION}-${ARCH}.tar.gz" "${DIST_ID}/${DIST_VERSION}/${ARCH}"
+fi
